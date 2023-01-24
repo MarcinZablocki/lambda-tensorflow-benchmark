@@ -117,11 +117,20 @@ metadata() {
 		nvcc --version | $awk '/release/ { print "CUDA", $6 }'
 
 		# Nvidia Driver Version
-		modinfo nvidia | $awk '/^version:/ { print "Nvidia", $2 }'
+          if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+              echo "Not running modinfo in container" 
+          else 
+              modinfo nvidia | $awk '/^version:/ { print "Nvidia", $2 }'
+	  fi
+      
 	elif [ "$GPU_VENDOR" = "amd" ]; then
 		rocm-smi --showproductname --csv | sed '/^$/d' | $awk -F, 'NR!=1 { print $1, $2 }'
 		hipcc --version | $awk 'NR==1 { print "HIP", $3 }'
+	    if grep -sq 'docker\|lxc' /proc/1/cgroup; then
+                echo "Not running modinfo in container" 
+            else 
 		modinfo amdgpu  | $awk '/^version:/ { print "AMDGPU", $2 }'
+	    fi
 	fi
 
 	# Tensorflow Version
